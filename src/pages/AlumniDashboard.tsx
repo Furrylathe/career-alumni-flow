@@ -99,7 +99,7 @@ const AlumniDashboard = () => {
     setIsSubmitting(true);
     try {
       // The API call below is correctly structured to match your mailer.py backend
-      await fetch("http://localhost:5000/api/send-application-mail", {
+      await fetch("http://localhost:5001/api/send-application-mail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -21,19 +21,8 @@ import axios from "axios";
 const AlumniVerification = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
-  
-   useEffect(() => {
-    if (!user) {
-      navigate("/alumni-login");
-    } else if (user.isVerified) {
-      navigate("/alumni-dashboard");
-    }
-  }, [user, navigate]);
 
-  if (!user || user.isVerified) {
-    return null;
-  }
-
+  // All hooks must be declared before any conditional return
   const [formData, setFormData] = useState({
     fullName: "",
     usn: "",
@@ -43,6 +32,19 @@ const AlumniVerification = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/alumni-login");
+    } else if (user.isVerified) {
+      navigate("/alumni-dashboard");
+    }
+  }, [user, navigate]);
+
+  // Only return null after all hooks and effects
+  if (!user || user.isVerified) {
+    return null;
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -95,11 +97,6 @@ const AlumniVerification = () => {
       setLoading(false);
     }
   };
-
-  if (!user) {
-    navigate("/alumni-login");
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-secondary">
