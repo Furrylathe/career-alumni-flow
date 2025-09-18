@@ -8,6 +8,7 @@ import { GraduationCap, Briefcase, LogOut, Search, User, Mail, Code, ExternalLin
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface JobMatch {
   id: string;
@@ -28,6 +29,8 @@ const AlumniDashboard = () => {
   const [matchedJobs, setMatchedJobs] = useState<JobMatch[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredJobs, setFilteredJobs] = useState<JobMatch[]>([]);
+  const [openModalJobId, setOpenModalJobId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user || !user.isVerified) {
@@ -38,20 +41,20 @@ const AlumniDashboard = () => {
     // Load all jobs and find matches based on skills
     const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
     const userSkills = user.skills || [];
-    
+
     const matches: JobMatch[] = allJobs.map((job: any) => {
       // Calculate match score based on skill overlap
       const jobSkills = job.skillsets.map((s: string) => s.toLowerCase());
       const userSkillsLower = userSkills.map((s: string) => s.toLowerCase());
-      
-      const matchingSkills = jobSkills.filter((skill: string) => 
-        userSkillsLower.some(userSkill => 
+
+      const matchingSkills = jobSkills.filter((skill: string) =>
+        userSkillsLower.some(userSkill =>
           userSkill.includes(skill) || skill.includes(userSkill)
         )
       );
-      
+
       const matchScore = (matchingSkills.length / jobSkills.length) * 100;
-      
+
       return {
         ...job,
         matchScore: Math.round(matchScore)
@@ -88,6 +91,49 @@ const AlumniDashboard = () => {
     navigate("/");
   };
 
+  // --- START OF CODE FOR API CALL ---
+  const handleOpenModal = (jobId: string) => setOpenModalJobId(jobId);
+  const handleCloseModal = () => setOpenModalJobId(null);
+
+  const handleSubmitApplication = async (job: JobMatch) => {
+    setIsSubmitting(true);
+    try {
+      // The API call below is correctly structured to match your mailer.py backend
+      await fetch("http://localhost:5000/api/send-application-mail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: job.userEmail,
+          alumni: {
+            name: user.name,
+            email: user.email,
+            usn: user.usn,
+            skills: user.skills,
+            experience: user.experience,
+          },
+          job: {
+            id: job.id,
+            role: job.role,
+            referralCode: job.referralCode,
+            description: job.description,
+            skillsets: job.skillsets,
+            experience: job.experience,
+            datePosted: job.datePosted,
+            userName: job.userName,
+          },
+        }),
+      });
+      toast.success("Application submitted! The alumni will be notified by email.");
+      handleCloseModal();
+    } catch (error) {
+      toast.error("Failed to submit application. Please try again.");
+    }
+    setIsSubmitting(false);
+  };
+  // --- END OF CODE FOR API CALL ---
+
   if (!user || !user.isVerified) {
     return null;
   }
@@ -108,16 +154,16 @@ const AlumniDashboard = () => {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => navigate('/job-openings')}
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 All Jobs
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={handleLogout}
               >
@@ -161,12 +207,12 @@ const AlumniDashboard = () => {
                     {matchedJobs.length === 0 ? "No job matches found" : "No results found"}
                   </h3>
                   <p className="text-muted-foreground text-center mb-4">
-                    {matchedJobs.length === 0 
+                    {matchedJobs.length === 0
                       ? "No jobs currently match your skills. Check back later for new opportunities!"
                       : "Try adjusting your search terms to find more opportunities."
                     }
                   </p>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => navigate('/job-openings')}
                   >
@@ -183,7 +229,7 @@ const AlumniDashboard = () => {
                         <div className="space-y-2">
                           <CardTitle className="flex items-center space-x-2">
                             <span>{job.role}</span>
-                            <Badge 
+                            <Badge
                               variant={job.matchScore >= 80 ? "default" : job.matchScore >= 50 ? "secondary" : "outline"}
                               className="text-xs"
                             >
@@ -203,18 +249,18 @@ const AlumniDashboard = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <p className="text-sm text-muted-foreground">{job.description}</p>
-                      
+
                       <div className="space-y-2">
                         <h4 className="font-medium text-sm">Required Skills:</h4>
                         <div className="flex flex-wrap gap-2">
                           {job.skillsets.map((skill, index) => {
-                            const isMatched = user.skills?.some(userSkill => 
-                              userSkill.toLowerCase().includes(skill.toLowerCase()) || 
+                            const isMatched = user.skills?.some(userSkill =>
+                              userSkill.toLowerCase().includes(skill.toLowerCase()) ||
                               skill.toLowerCase().includes(userSkill.toLowerCase())
                             );
                             return (
-                              <Badge 
-                                key={index} 
+                              <Badge
+                                key={index}
                                 variant={isMatched ? "default" : "secondary"}
                                 className={isMatched ? "bg-success text-success-foreground" : ""}
                               >
@@ -230,18 +276,45 @@ const AlumniDashboard = () => {
                           <span className="font-medium">Experience:</span> {job.experience}
                         </div>
                         <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              navigator.clipboard.writeText(job.userEmail);
-                              toast.success("Contact email copied to clipboard!");
-                            }}
-                          >
-                            <Mail className="mr-1 h-3 w-3" />
-                            Contact
-                          </Button>
-                          <Button 
+                          {/* ---- MODAL TRIGGER ---- */}
+                          <Dialog open={openModalJobId === job.id} onOpenChange={open => open ? handleOpenModal(job.id) : handleCloseModal()}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenModal(job.id)}
+                              >
+                                <Mail className="mr-1 h-3 w-3" />
+                                Contact
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Submit Job Application</DialogTitle>
+                              </DialogHeader>
+                              <div className="py-4">
+                                <p>Do you want to submit your application to <span className="font-medium">{job.userName}</span> for the role <span className="font-medium">{job.role}</span>?</p>
+                                <p className="text-xs mt-2 text-muted-foreground">Your details and referral code will be sent to the job poster via email.</p>
+                              </div>
+                              <DialogFooter>
+                                <Button
+                                  variant="ghost"
+                                  onClick={handleCloseModal}
+                                  disabled={isSubmitting}
+                                >
+                                  No
+                                </Button>
+                                <Button
+                                  onClick={() => handleSubmitApplication(job)}
+                                  disabled={isSubmitting}
+                                >
+                                  {isSubmitting ? "Submitting..." : "Yes"}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                          {/* ---- END MODAL ---- */}
+                          <Button
                             size="sm"
                             onClick={() => handleApply(job)}
                           >
@@ -271,19 +344,19 @@ const AlumniDashboard = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Full Name</Label>
+                    <label className="text-sm font-medium">Full Name</label>
                     <p className="text-sm bg-muted rounded-md px-3 py-2">{user.name}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Email</Label>
+                    <label className="text-sm font-medium">Email</label>
                     <p className="text-sm bg-muted rounded-md px-3 py-2">{user.email}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">USN</Label>
+                    <label className="text-sm font-medium">USN</label>
                     <p className="text-sm bg-muted rounded-md px-3 py-2">{user.usn}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Status</Label>
+                    <label className="text-sm font-medium">Status</label>
                     <Badge variant="default" className="bg-success text-success-foreground">
                       Verified Alumni
                     </Badge>
@@ -291,7 +364,7 @@ const AlumniDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Skills</Label>
+                  <label className="text-sm font-medium">Skills</label>
                   <div className="flex flex-wrap gap-2">
                     {user.skills?.map((skill, index) => (
                       <Badge key={index} variant="secondary">
@@ -302,7 +375,7 @@ const AlumniDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Experience</Label>
+                  <label className="text-sm font-medium">Experience</label>
                   <p className="text-sm bg-muted rounded-md px-3 py-2 whitespace-pre-wrap">
                     {user.experience}
                   </p>
