@@ -4,26 +4,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, User, GraduationCap, ArrowRight, X } from "lucide-react";
+import { 
+  CheckCircle, 
+  User, 
+  GraduationCap, 
+  ArrowRight, 
+  X, 
+  Upload, 
+  ShieldCheck 
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import axios from "axios";
 
 const AlumniVerification = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     fullName: "",
     usn: "",
     skills: "",
     experience: "",
   });
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files ? e.target.files[0] : null);
   };
 
   const handleSubmitVerification = async () => {
@@ -31,23 +45,43 @@ const AlumniVerification = () => {
       toast.error("Please fill in all fields");
       return;
     }
+    if (!file) {
+      toast.error("Please upload your degree certificate");
+      return;
+    }
 
     setLoading(true);
-    
-    // Simulate verification process
-    setTimeout(() => {
-      updateUser({
-        name: formData.fullName,
-        usn: formData.usn,
-        skills: formData.skills.split(',').map(s => s.trim()),
-        experience: formData.experience,
-        isVerified: true,
+    try {
+      const submitData = new FormData();
+      submitData.append("name", formData.fullName);
+      submitData.append("university_seat_number", formData.usn);
+      submitData.append("skills", formData.skills);
+      submitData.append("experience", formData.experience);
+      submitData.append("degree_file", file);
+
+      const response = await axios.post("http://127.0.0.1:5000/api/verify_degree_certificate", submitData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      
+
+      if (response.data.status === "success") {
+        updateUser({
+          name: formData.fullName,
+          usn: formData.usn,
+          skills: formData.skills.split(',').map(s => s.trim()),
+          experience: formData.experience,
+          isVerified: true,
+        });
+        setVerified(true);
+        toast.success("✅ Verification successful! Welcome to the alumni network.");
+      } else {
+        toast.error("❌ Invalid credentials/document. Verification failed.");
+        setVerified(false);
+      }
+    } catch (err: any) {
+      toast.error("Server not reachable. Please check if the backend is running.");
+    } finally {
       setLoading(false);
-      toast.success("Verification successful! Welcome to the alumni network.");
-      navigate("/alumni-dashboard");
-    }, 2000);
+    }
   };
 
   if (!user) {
@@ -55,38 +89,31 @@ const AlumniVerification = () => {
     return null;
   }
 
-  if (user.isVerified) {
-    navigate("/alumni-dashboard");
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-secondary">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <GraduationCap className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold">Alumni Verification</h1>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <GraduationCap className="h-6 w-6 text-primary" />
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                updateUser({ isVerified: false });
-                navigate("/alumni-login");
-              }}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
+            <div>
+              <h1 className="text-xl font-semibold">Alumni Verification</h1>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              updateUser({ isVerified: false });
+              navigate("/alumni-login");
+            }}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
         </div>
       </header>
 
@@ -124,7 +151,7 @@ const AlumniVerification = () => {
                 <span>Alumni Verification</span>
               </CardTitle>
               <CardDescription>
-                Please provide your details for verification. This helps us ensure you're part of our alumni network and match you with relevant opportunities.
+                Upload your certificate and provide details to complete verification.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -135,12 +162,12 @@ const AlumniVerification = () => {
                     id="fullName"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    placeholder="Enter your full name as per records"
+                    placeholder="Enter your full name"
                     disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="usn">University Serial Number (USN) *</Label>
+                  <Label htmlFor="usn">USN *</Label>
                   <Input
                     id="usn"
                     value={formData.usn}
@@ -152,61 +179,62 @@ const AlumniVerification = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="skills">Skills & Technologies *</Label>
+                <Label htmlFor="skills">Skills *</Label>
                 <Input
                   id="skills"
                   value={formData.skills}
                   onChange={(e) => handleInputChange("skills", e.target.value)}
-                  placeholder="e.g., JavaScript, React, Python, Data Science (comma-separated)"
+                  placeholder="e.g., JavaScript, React"
                   disabled={loading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  List your key skills to help us match you with relevant job openings
-                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="experience">Professional Experience *</Label>
+                <Label htmlFor="experience">Experience *</Label>
                 <Textarea
                   id="experience"
                   value={formData.experience}
                   onChange={(e) => handleInputChange("experience", e.target.value)}
-                  placeholder="Briefly describe your work experience, internships, or projects..."
-                  rows={4}
+                  placeholder="Your work experience"
+                  rows={3}
                   disabled={loading}
                 />
               </div>
 
-              {/* Skills Preview */}
-              {formData.skills && (
-                <div className="space-y-2">
-                  <Label>Skills Preview:</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.skills.split(',').map((skill, index) => (
-                      <Badge key={index} variant="secondary">
-                        {skill.trim()}
-                      </Badge>
-                    ))}
-                  </div>
+              {/* File Upload + Verification Button in one row */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 border border-dashed border-muted-foreground rounded-lg p-4 text-center">
+                  <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                  <Input
+                    id="certificate"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileChange}
+                    disabled={loading}
+                  />
+                  {file && <p className="text-sm text-primary mt-1">{file.name}</p>}
                 </div>
-              )}
 
-              <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Verification Process</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Your details will be verified against our alumni database</li>
-                  <li>• Skills matching will be enabled for job recommendations</li>
-                  <li>• Verification typically takes a few moments</li>
-                </ul>
+                <Button
+                  onClick={handleSubmitVerification}
+                  className={`flex items-center gap-2 px-4 py-6 h-full w-40 
+                    ${verified ? "bg-green-600 hover:bg-green-700" : ""}`}
+                  disabled={loading || verified}
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                  {loading ? "Verifying..." : verified ? "Verified ✅" : "Verify"}
+                </Button>
               </div>
 
-              <Button 
-                onClick={handleSubmitVerification} 
-                className="w-full"
-                disabled={loading}
+              {/* Continue Button */}
+              <Button
+                onClick={() => navigate("/alumni-dashboard")}
+                className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+                           text-white font-semibold py-3 rounded-xl shadow-lg 
+                           hover:opacity-90 transition duration-300 ease-in-out"
+                disabled={!verified}
               >
-                {loading ? "Verifying..." : "Submit for Verification"}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                Continue →
               </Button>
             </CardContent>
           </Card>
