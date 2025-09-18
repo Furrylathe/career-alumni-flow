@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 
 const AlumniVerification = () => {
@@ -209,6 +210,18 @@ const AlumniVerification = () => {
                   disabled={loading}
                 />
               </div>
+              {formData.skills && (
+                <div className="space-y-2">
+                  <Label>Skills Preview:</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.skills.split(',').map((skill, index) => (
+                      <Badge key={index} variant="secondary">
+                        {skill.trim()}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* File Upload + Verification Button in one row */}
               <div className="flex items-center gap-4">
@@ -231,16 +244,16 @@ const AlumniVerification = () => {
                   disabled={loading || verified}
                 >
                   <ShieldCheck className="h-5 w-5" />
-                  {loading ? "Verifying..." : verified ? "Verified ✅" : "Verify"}
+                  {loading ? "Verifying..." : verified ? "Verified" : "Verify"}
                 </Button>
               </div>
 
               {/* Continue Button */}
               <Button
                 onClick={() => navigate("/alumni-dashboard")}
-                className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+                className="w-full bg-blue-600
                            text-white font-semibold py-3 rounded-xl shadow-lg 
-                           hover:opacity-90 transition duration-300 ease-in-out"
+                           hover:bg-teal-800 transition duration-300 ease-in-out"
                 disabled={!verified}
               >
                 Continue →
