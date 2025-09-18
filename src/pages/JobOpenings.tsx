@@ -175,7 +175,6 @@ const JobOpenings = () => {
         isOpen={isApplyModalOpen}
         onClose={() => setIsApplyModalOpen(false)}
       />
-      </div>
     </div>
   );
 };
