@@ -19,6 +19,8 @@ interface JobPosting {
   experience: string;
   referralCode: string;
   datePosted: string;
+  userEmail: string;      // Who posted
+  verifiedBy: string[];   // Users who verified
 }
 
 const UserDashboard = () => {
@@ -41,9 +43,7 @@ const UserDashboard = () => {
   useEffect(() => {
     // Load existing jobs from localStorage
     const savedJobs = localStorage.getItem(`user-jobs-${user?.id}`);
-    if (savedJobs) {
-      setJobs(JSON.parse(savedJobs));
-    }
+    if (savedJobs) setJobs(JSON.parse(savedJobs));
   }, [user?.id]);
 
   const handleProfileUpdate = () => {
@@ -69,16 +69,17 @@ const UserDashboard = () => {
       experience,
       referralCode: generateReferralCode(),
       datePosted: new Date().toLocaleDateString(),
+      userEmail: user?.email || "",
+      verifiedBy: [],
     };
 
     const updatedJobs = [...jobs, newJob];
     setJobs(updatedJobs);
     localStorage.setItem(`user-jobs-${user?.id}`, JSON.stringify(updatedJobs));
-    
+
     // Also save to global jobs list
     const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
-    const jobWithUser = { ...newJob, userEmail: user?.email, userName: user?.name || user?.email };
-    allJobs.push(jobWithUser);
+    allJobs.push(newJob);
     localStorage.setItem('allJobs', JSON.stringify(allJobs));
 
     // Reset form
@@ -88,6 +89,27 @@ const UserDashboard = () => {
     setExperience("");
     
     toast.success("Job posted successfully!");
+  };
+
+  // Verify a job
+  const handleVerify = (jobId: string) => {
+    const updatedJobs = jobs.map((job) => {
+      if (job.id === jobId && !job.verifiedBy.includes(user.email)) {
+        return { ...job, verifiedBy: [...job.verifiedBy, user.email] };
+      }
+      return job;
+    });
+    setJobs(updatedJobs);
+    localStorage.setItem(`user-jobs-${user?.id}`, JSON.stringify(updatedJobs));
+
+    // Update global jobs
+    const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
+    const updatedAllJobs = allJobs.map((job: JobPosting) =>
+      job.id === jobId ? { ...job, verifiedBy: [...job.verifiedBy, user.email] } : job
+    );
+    localStorage.setItem('allJobs', JSON.stringify(updatedAllJobs));
+
+    toast.success("Job verified successfully!");
   };
 
   const handleLogout = () => {
@@ -104,35 +126,25 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <User className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold">User Dashboard</h1>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <User className="h-6 w-6 text-primary" />
             </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate('/job-openings')}
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View All Jobs
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
+            <div>
+              <h1 className="text-xl font-semibold">User Dashboard</h1>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/job-openings')}>
+              <Eye className="mr-2 h-4 w-4" />
+              View All Jobs
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </div>
       </header>
@@ -145,6 +157,7 @@ const UserDashboard = () => {
             <TabsTrigger value="my-jobs">My Jobs ({jobs.length})</TabsTrigger>
           </TabsList>
 
+          {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
@@ -177,13 +190,12 @@ const UserDashboard = () => {
                     />
                   </div>
                 </div>
-                <Button onClick={handleProfileUpdate}>
-                  Update Profile
-                </Button>
+                <Button onClick={handleProfileUpdate}>Update Profile</Button>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Post Job Tab */}
           <TabsContent value="post-job" className="space-y-6">
             <Card>
               <CardHeader>
@@ -241,6 +253,7 @@ const UserDashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* My Jobs Tab */}
           <TabsContent value="my-jobs" className="space-y-6">
             {jobs.length === 0 ? (
               <Card>
@@ -276,15 +289,28 @@ const UserDashboard = () => {
                         <h4 className="font-medium">Required Skills:</h4>
                         <div className="flex flex-wrap gap-2">
                           {job.skillsets.map((skill, index) => (
-                            <Badge key={index} variant="secondary">
-                              {skill}
-                            </Badge>
+                            <Badge key={index} variant="secondary">{skill}</Badge>
                           ))}
                         </div>
                       </div>
                       <p className="text-sm">
                         <span className="font-medium">Experience:</span> {job.experience}
                       </p>
+
+                      {/* Verification Section */}
+                      {job.userEmail !== user.email && (
+                        <div className="flex items-center justify-between mt-2">
+                          <Button
+                            size="sm"
+                            variant={job.verifiedBy.includes(user.email) ? "secondary" : "outline"}
+                            onClick={() => handleVerify(job.id)}
+                            disabled={job.verifiedBy.includes(user.email)}
+                          >
+                            {job.verifiedBy.includes(user.email) ? "Verified" : "Verify"}
+                          </Button>
+                          <span>{job.verifiedBy.length} users verified</span>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

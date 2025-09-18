@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+const API_BASE = "http://localhost:5000/api"; // Flask backend
+
 const UserLogin = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -16,21 +18,37 @@ const UserLogin = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // --- Send OTP ---
   const handleSendOTP = async () => {
     if (!email) {
       toast.error("Please enter your email address");
       return;
     }
-    
+
     setLoading(true);
-    // Simulate OTP sending
-    setTimeout(() => {
-      setOtpSent(true);
+    try {
+      const res = await fetch(`${API_BASE}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOtpSent(true);
+        toast.success("✅ OTP sent to your email!");
+      } else {
+        toast.error(data.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Server error while sending OTP");
+    } finally {
       setLoading(false);
-      toast.success("OTP sent to your email address!");
-    }, 1000);
+    }
   };
 
+  // --- Verify OTP ---
   const handleVerifyOTP = async () => {
     if (!otp) {
       toast.error("Please enter the OTP");
@@ -38,18 +56,32 @@ const UserLogin = () => {
     }
 
     setLoading(true);
-    // Simulate OTP verification
-    setTimeout(() => {
-      const userData = {
-        id: "user-" + Date.now(),
-        email,
-        role: "user" as const,
-      };
-      login(userData);
+    try {
+      const res = await fetch(`${API_BASE}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const userData = {
+          id: "user-" + Date.now(),
+          email,
+          role: "user" as const,
+        };
+        login(userData);
+        toast.success("🎉 Login successful!");
+        navigate("/user-dashboard");
+      } else {
+        toast.error(data.message || "❌ Invalid OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Server error while verifying OTP");
+    } finally {
       setLoading(false);
-      toast.success("Login successful!");
-      navigate("/user-dashboard");
-    }, 1000);
+    }
   };
 
   return (
@@ -72,10 +104,9 @@ const UserLogin = () => {
             </div>
             <CardTitle className="text-2xl">User Login</CardTitle>
             <CardDescription>
-              {!otpSent 
+              {!otpSent
                 ? "Enter your email to receive a one-time password"
-                : "Enter the OTP sent to your email"
-              }
+                : "Enter the OTP sent to your email"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -96,11 +127,7 @@ const UserLogin = () => {
                     />
                   </div>
                 </div>
-                <Button 
-                  onClick={handleSendOTP} 
-                  className="w-full"
-                  disabled={loading}
-                >
+                <Button onClick={handleSendOTP} className="w-full" disabled={loading}>
                   {loading ? "Sending OTP..." : "Send OTP"}
                 </Button>
               </div>
@@ -119,15 +146,11 @@ const UserLogin = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Button 
-                    onClick={handleVerifyOTP} 
-                    className="w-full"
-                    disabled={loading}
-                  >
+                  <Button onClick={handleVerifyOTP} className="w-full" disabled={loading}>
                     {loading ? "Verifying..." : "Verify & Login"}
                   </Button>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={() => setOtpSent(false)}
                     className="w-full"
                     disabled={loading}
