@@ -9,6 +9,7 @@ export interface Job {
   experience: number; // years
   openingsTotal: number;
   openingsLeft: number;
+  filled: number; // number of filled positions
   postedBy: string; // user name or 'external'
   referralCode?: string; // present for user posts
   sourceReferral?: string; // for external (LinkedIn etc.)
@@ -21,7 +22,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'alumni';
+  role: 'user' | 'alumni' | 'admin';
   organisation?: string;
   isVerified?: boolean; // for alumni
   usn?: string;

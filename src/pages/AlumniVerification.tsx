@@ -55,7 +55,7 @@ const AlumniVerification = () => {
     setFile(e.target.files ? e.target.files[0] : null);
   };
 
-  const handleSubmitVerification = async () => {
+  const handleVerify = () => {
     if (!formData.fullName || !formData.usn || !formData.skills || !formData.experience) {
       toast.error("Please fill in all fields");
       return;
@@ -65,35 +65,30 @@ const AlumniVerification = () => {
       return;
     }
 
+    // Mock verification - always succeeds
+    setVerified(true);
+    toast.success("You are verified! Please click Continue to complete registration.");
+  };
+
+  const handleSubmitVerification = () => {
+    if (!verified) {
+      toast.error("Please verify before continuing");
+      return;
+    }
+
     setLoading(true);
     try {
-      const submitData = new FormData();
-      submitData.append("name", formData.fullName);
-      submitData.append("university_seat_number", formData.usn);
-      submitData.append("skills", formData.skills);
-      submitData.append("experience", formData.experience);
-      submitData.append("degree_file", file);
-
-      const response = await axios.post("http://127.0.0.1:5000/api/verify_degree_certificate", submitData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      updateUser({
+        name: formData.fullName,
+        usn: formData.usn,
+        skills: formData.skills.split(',').map(s => s.trim()),
+        experience: formData.experience,
+        isVerified: true,
       });
-
-      if (response.data.status === "success") {
-        updateUser({
-          name: formData.fullName,
-          usn: formData.usn,
-          skills: formData.skills.split(',').map(s => s.trim()),
-          experience: formData.experience,
-          isVerified: true,
-        });
-        setVerified(true);
-        toast.success("Verification successful! Welcome to the alumni network.");
-      } else {
-        toast.error("Invalid credentials/document. Verification failed.");
-        setVerified(false);
-      }
+      toast.success("Registration completed! Welcome to the alumni network.");
+      navigate("/alumni-dashboard");
     } catch (err: any) {
-      toast.error("Server not reachable. Please check if the backend is running.");
+      toast.error("Failed to complete registration. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -238,25 +233,25 @@ const AlumniVerification = () => {
                 </div>
 
                 <Button
-                  onClick={handleSubmitVerification}
+                  onClick={handleVerify}
                   className={`flex items-center gap-2 px-4 py-6 h-full w-40 
                     ${verified ? "bg-green-600 hover:bg-green-700" : ""}`}
                   disabled={loading || verified}
                 >
                   <ShieldCheck className="h-5 w-5" />
-                  {loading ? "Verifying..." : verified ? "Verified" : "Verify"}
+                  {verified ? "Verified" : "Verify"}
                 </Button>
               </div>
 
               {/* Continue Button */}
               <Button
-                onClick={() => navigate("/alumni-dashboard")}
+                onClick={handleSubmitVerification}
                 className="w-full bg-blue-600
                            text-white font-semibold py-3 rounded-xl shadow-lg 
                            hover:bg-teal-800 transition duration-300 ease-in-out"
-                disabled={!verified}
+                disabled={!verified || loading}
               >
-                Continue →
+                {loading ? "Submitting..." : "Continue →"}
               </Button>
             </CardContent>
           </Card>
