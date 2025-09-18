@@ -13,7 +13,7 @@ const Index = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Briefcase className="h-8 w-8 text-white" />
-            <span className="text-2xl font-bold text-white">TalentBridge</span>
+            <span className="text-2xl font-bold text-white">Hashiras</span>
           </div>
           <Button 
             variant="outline" 
@@ -117,7 +117,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 text-center">
         <p className="text-white/60">
-          © 2024 TalentBridge. Connecting opportunities with talent.
+          © 2024 Hashiras. Connecting opportunities with talent.
         </p>
       </footer>
     </div>
