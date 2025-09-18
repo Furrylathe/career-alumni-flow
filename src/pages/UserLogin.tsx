@@ -36,7 +36,7 @@ const UserLogin = () => {
       const data = await res.json();
       if (res.ok && data.success) {
         setOtpSent(true);
-        toast.success("✅ OTP sent to your email!");
+        toast.success("OTP sent to your email!");
       } else {
         toast.error(data.message || "Failed to send OTP");
       }
@@ -71,10 +71,10 @@ const UserLogin = () => {
           role: "user" as const,
         };
         login(userData);
-        toast.success("🎉 Login successful!");
+        toast.success("Login successful!");
         navigate("/user-dashboard");
       } else {
-        toast.error(data.message || "❌ Invalid OTP");
+        toast.error(data.message || "Invalid OTP");
       }
     } catch (err) {
       console.error(err);

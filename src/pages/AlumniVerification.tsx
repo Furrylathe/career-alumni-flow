@@ -86,9 +86,9 @@ const AlumniVerification = () => {
           isVerified: true,
         });
         setVerified(true);
-        toast.success("✅ Verification successful! Welcome to the alumni network.");
+        toast.success("Verification successful! Welcome to the alumni network.");
       } else {
-        toast.error("❌ Invalid credentials/document. Verification failed.");
+        toast.error("Invalid credentials/document. Verification failed.");
         setVerified(false);
       }
     } catch (err: any) {
