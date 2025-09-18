@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,18 @@ import axios from "axios";
 const AlumniVerification = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
+  
+   useEffect(() => {
+    if (!user) {
+      navigate("/alumni-login");
+    } else if (user.isVerified) {
+      navigate("/alumni-dashboard");
+    }
+  }, [user, navigate]);
+
+  if (!user || user.isVerified) {
+    return null;
+  }
 
   const [formData, setFormData] = useState({
     fullName: "",

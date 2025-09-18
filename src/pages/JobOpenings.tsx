@@ -2,39 +2,30 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Briefcase, Search, Filter, ArrowLeft, Mail, Code, Building2 } from "lucide-react";
+import { Briefcase, Search, Filter, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-
-interface Job {
-  id: string;
-  role: string;
-  description: string;
-  skillsets: string[];
-  experience: string;
-  referralCode: string;
-  datePosted: string;
-  userEmail: string;
-  userName: string;
-}
+import { useJobs } from "@/contexts/JobContext";
+import { useAuth } from "@/contexts/AuthContext";
+import JobCard from "@/components/JobCard";
+import ApplyModal from "@/components/ApplyModal";
+import { Job } from "@/types";
 
 const JobOpenings = () => {
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const { user } = useAuth();
+  const { jobs } = useJobs();
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [experienceFilter, setExperienceFilter] = useState("all");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
   useEffect(() => {
-    // Load all jobs
-    const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
-    // Sort by most recent first
-    const sortedJobs = allJobs.sort((a: Job, b: Job) => new Date(b.datePosted).getTime() - new Date(a.datePosted).getTime());
-    setJobs(sortedJobs);
+    // Sort jobs by most recent first
+    const sortedJobs = [...jobs].sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
     setFilteredJobs(sortedJobs);
-  }, []);
+  }, [jobs]);
 
   useEffect(() => {
     let filtered = jobs;
@@ -42,26 +33,27 @@ const JobOpenings = () => {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(job =>
-        job.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.skillsets.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        job.userName.toLowerCase().includes(searchTerm.toLowerCase())
+        job.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.postedBy.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by experience
     if (experienceFilter !== "all") {
       filtered = filtered.filter(job => {
-        const experience = job.experience.toLowerCase();
+        const experience = job.experience;
         switch (experienceFilter) {
           case "fresher":
-            return experience.includes("fresher") || experience.includes("0") || experience.includes("entry");
+            return experience === 0 || experience === 1;
           case "junior":
-            return experience.includes("1") || experience.includes("2") || experience.includes("junior");
+            return experience >= 1 && experience <= 2;
           case "mid":
-            return experience.includes("3") || experience.includes("4") || experience.includes("5") || experience.includes("mid");
+            return experience >= 3 && experience <= 5;
           case "senior":
-            return experience.includes("6") || experience.includes("7") || experience.includes("8") || experience.includes("senior");
+            return experience >= 6;
           default:
             return true;
         }
@@ -71,14 +63,9 @@ const JobOpenings = () => {
     setFilteredJobs(filtered);
   }, [searchTerm, experienceFilter, jobs]);
 
-  const handleCopyReferralCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success(`Referral code "${code}" copied to clipboard!`);
-  };
-
-  const handleContactRecruiter = (email: string) => {
-    navigator.clipboard.writeText(email);
-    toast.success("Recruiter email copied to clipboard!");
+  const handleApply = (job: Job) => {
+    setSelectedJob(job);
+    setIsApplyModalOpen(true);
   };
 
   return (
@@ -172,74 +159,22 @@ const JobOpenings = () => {
         ) : (
           <div className="grid gap-6">
             {filteredJobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-medium transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2">
-                      <CardTitle className="text-xl">{job.role}</CardTitle>
-                      <CardDescription className="flex items-center space-x-4">
-                        <span className="flex items-center space-x-1">
-                          <Building2 className="h-3 w-3" />
-                          <span>Posted by {job.userName}</span>
-                        </span>
-                        <span>•</span>
-                        <span>{job.datePosted}</span>
-                      </CardDescription>
-                    </div>
-                    <Badge variant="outline" className="bg-primary/10 text-primary font-mono text-sm">
-                      {job.referralCode}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">{job.description}</p>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="font-medium text-sm mb-2">Required Skills:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {job.skillsets.map((skill, index) => (
-                          <Badge key={index} variant="secondary">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <span className="font-medium text-sm">Experience Required: </span>
-                      <span className="text-sm">{job.experience}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4 border-t">
-                    <div className="text-xs text-muted-foreground">
-                      Use the referral code when applying for priority consideration
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleContactRecruiter(job.userEmail)}
-                      >
-                        <Mail className="mr-1 h-3 w-3" />
-                        Contact
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={() => handleCopyReferralCode(job.referralCode)}
-                      >
-                        <Code className="mr-1 h-3 w-3" />
-                        Copy Code
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <JobCard 
+                key={job.id} 
+                job={job} 
+                showApplyButton={user?.role === 'alumni'} 
+                onApply={handleApply} 
+              />
             ))}
           </div>
         )}
       </div>
+
+      <ApplyModal
+        job={selectedJob}
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+      />
     </div>
   );
 };
