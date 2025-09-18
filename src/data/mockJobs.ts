@@ -1,0 +1,212 @@
+import { Job } from '@/types';
+
+export const mockJobs: Job[] = [
+  // LinkedIn jobs
+  {
+    id: "lnk-1",
+    source: "LinkedIn",
+    title: "Frontend Engineer",
+    company: "Acme Web",
+    description: "Build React apps",
+    skills: ["React", "TypeScript", "Bootstrap"],
+    experience: 2,
+    openingsTotal: 3,
+    openingsLeft: 2,
+    postedBy: "external",
+    sourceReferral: "LK-001",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-01T12:00:00Z"
+  },
+  {
+    id: "lnk-2",
+    source: "LinkedIn",
+    title: "Senior React Developer",
+    company: "TechCorp",
+    description: "Lead frontend development team and architect scalable React applications",
+    skills: ["React", "TypeScript", "Redux", "Next.js"],
+    experience: 5,
+    openingsTotal: 1,
+    openingsLeft: 1,
+    postedBy: "external",
+    sourceReferral: "LK-002",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-05T14:30:00Z"
+  },
+  {
+    id: "lnk-3",
+    source: "LinkedIn",
+    title: "UI/UX Designer",
+    company: "Design Studios",
+    description: "Create beautiful user interfaces and experiences",
+    skills: ["Figma", "Sketch", "Adobe XD", "HTML", "CSS"],
+    experience: 3,
+    openingsTotal: 2,
+    openingsLeft: 2,
+    postedBy: "external",
+    sourceReferral: "LK-003",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-03T10:15:00Z"
+  },
+
+  // Indeed jobs
+  {
+    id: "ind-1",
+    source: "Indeed",
+    title: "Backend Developer",
+    company: "DataCorp",
+    description: "Work on microservices",
+    skills: ["Java", "Spring Boot"],
+    experience: 3,
+    openingsTotal: 2,
+    openingsLeft: 0,
+    postedBy: "external",
+    sourceReferral: "IN-235",
+    blocked: true,
+    interviewStatus: "Interview Over",
+    postedAt: "2025-08-25T09:00:00Z"
+  },
+  {
+    id: "ind-2",
+    source: "Indeed",
+    title: "DevOps Engineer",
+    company: "CloudTech",
+    description: "Manage cloud infrastructure and CI/CD pipelines",
+    skills: ["AWS", "Docker", "Kubernetes", "Jenkins"],
+    experience: 4,
+    openingsTotal: 1,
+    openingsLeft: 1,
+    postedBy: "external",
+    sourceReferral: "IN-236",
+    blocked: false,
+    interviewStatus: "In Progress",
+    postedAt: "2025-08-30T11:45:00Z"
+  },
+
+  // Naukri jobs
+  {
+    id: "nkr-1",
+    source: "Naukri",
+    title: "Fullstack Developer",
+    company: "StartupX",
+    description: "MERN stack",
+    skills: ["Node", "React", "MongoDB"],
+    experience: 1,
+    openingsTotal: 4,
+    openingsLeft: 4,
+    postedBy: "external",
+    sourceReferral: "NK-752",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-10T10:00:00Z"
+  },
+  {
+    id: "nkr-2",
+    source: "Naukri",
+    title: "Python Developer",
+    company: "AI Solutions",
+    description: "Build machine learning applications with Python and Django",
+    skills: ["Python", "Django", "Machine Learning", "PostgreSQL"],
+    experience: 2,
+    openingsTotal: 3,
+    openingsLeft: 1,
+    postedBy: "external",
+    sourceReferral: "NK-753",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-08T16:20:00Z"
+  },
+
+  // Glassdoor job
+  {
+    id: "gls-1",
+    source: "Glassdoor",
+    title: "Mobile App Developer",
+    company: "MobileFirst",
+    description: "Develop cross-platform mobile applications using React Native",
+    skills: ["React Native", "JavaScript", "iOS", "Android"],
+    experience: 3,
+    openingsTotal: 2,
+    openingsLeft: 2,
+    postedBy: "external",
+    sourceReferral: "GD-101",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-12T13:10:00Z"
+  },
+
+  // User-posted jobs
+  {
+    id: "usr-1",
+    source: "User",
+    title: "Referral: QA Engineer",
+    company: "MyCompany",
+    description: "Manual + Automation QA",
+    skills: ["Selenium", "Testing"],
+    experience: 1,
+    openingsTotal: 2,
+    openingsLeft: 2,
+    postedBy: "John Doe",
+    referralCode: "REF-JD-01",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-15T15:00:00Z"
+  },
+  {
+    id: "usr-2",
+    source: "User",
+    title: "Software Engineer",
+    company: "Tech Solutions Inc",
+    description: "Full-stack development with modern technologies",
+    skills: ["React", "Node.js", "PostgreSQL", "TypeScript"],
+    experience: 2,
+    openingsTotal: 3,
+    openingsLeft: 3,
+    postedBy: "Jane Smith",
+    referralCode: "REF-JS-02",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-14T09:30:00Z"
+  },
+  {
+    id: "usr-3",
+    source: "User",
+    title: "Data Analyst",
+    company: "Analytics Pro",
+    description: "Analyze business data and create insightful reports",
+    skills: ["SQL", "Python", "Power BI", "Excel"],
+    experience: 1,
+    openingsTotal: 1,
+    openingsLeft: 1,
+    postedBy: "Mike Johnson",
+    referralCode: "REF-MJ-03",
+    blocked: false,
+    interviewStatus: "Open",
+    postedAt: "2025-09-13T11:15:00Z"
+  },
+  {
+    id: "usr-4",
+    source: "User",
+    title: "Product Manager",
+    company: "Innovation Labs",
+    description: "Lead product development and strategy for SaaS products",
+    skills: ["Product Management", "Agile", "Scrum", "Analytics"],
+    experience: 4,
+    openingsTotal: 1,
+    openingsLeft: 0,
+    postedBy: "Sarah Wilson",
+    referralCode: "REF-SW-04",
+    blocked: true,
+    interviewStatus: "Interview Over",
+    postedAt: "2025-09-11T14:45:00Z"
+  }
+];
+
+// Mock verified USNs for alumni verification
+export const mockVerifiedUSNs = [
+  "1RV21CS001", "1RV21CS002", "1RV21CS003", "1RV21CS004", "1RV21CS005",
+  "1RV20CS001", "1RV20CS002", "1RV20CS003", "1RV20CS004", "1RV20CS005",
+  "1RV19CS001", "1RV19CS002", "1RV19CS003", "1RV19CS004", "1RV19CS005"
+];
