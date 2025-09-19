@@ -8,11 +8,9 @@ import { JobProvider } from "./contexts/JobContext";
 import Index from "./pages/Index";
 import UserLogin from "./pages/UserLogin";
 import AlumniLogin from "./pages/AlumniLogin";
-import AdminLogin from "./pages/AdminLogin";
 import UserDashboard from "./pages/UserDashboard";
 import AlumniVerification from "./pages/AlumniVerification";
 import AlumniDashboard from "./pages/AlumniDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import JobOpenings from "./pages/JobOpenings";
 import JobDetail from "./pages/JobDetail";
 import NotFound from "./pages/NotFound";
@@ -31,11 +29,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/user-login" element={<UserLogin />} />
             <Route path="/alumni-login" element={<AlumniLogin />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/user-dashboard" element={<UserDashboard />} />
             <Route path="/alumni-verification" element={<AlumniVerification />} />
             <Route path="/alumni-dashboard" element={<AlumniDashboard />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             
             <Route path="/job-openings" element={<JobOpenings />} />
             <Route path="/job/:id" element={<JobDetail />} />

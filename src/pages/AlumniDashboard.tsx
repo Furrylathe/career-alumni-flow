@@ -7,132 +7,89 @@ import { Input } from "@/components/ui/input";
 import { GraduationCap, Briefcase, LogOut, Search, User, Mail, Code, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useJobs } from "@/contexts/JobContext";
 import { toast } from "sonner";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
-interface JobMatch {
-  id: string;
-  role: string;
-  description: string;
-  skillsets: string[];
-  experience: string;
-  referralCode: string;
-  datePosted: string;
-  userEmail: string;
-  userName: string;
-  matchScore: number;
-}
+import ApplyModal from "@/components/ApplyModal";
+import FeedbackForm from "@/components/FeedbackForm";
 
 const AlumniDashboard = () => {
   const { user, logout } = useAuth();
+  const { jobs, getUserApplications } = useJobs();
   const navigate = useNavigate();
-  const [matchedJobs, setMatchedJobs] = useState<JobMatch[]>([]);
+  
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredJobs, setFilteredJobs] = useState<JobMatch[]>([]);
-  const [openModalJobId, setOpenModalJobId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
+  const [showAllJobs, setShowAllJobs] = useState(false);
+  const [selectedJobForApplication, setSelectedJobForApplication] = useState<string | null>(null);
+  const [selectedJobForFeedback, setSelectedJobForFeedback] = useState<string | null>(null);
 
+  // Filter jobs based on user skills and availability
   useEffect(() => {
-    if (!user || !user.isVerified) {
+    if (!user?.isVerified) {
       navigate("/alumni-verification");
       return;
     }
 
-    // Load all jobs and find matches based on skills
-    const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
-    const userSkills = user.skills || [];
-
-    const matches: JobMatch[] = allJobs.map((job: any) => {
-      // Calculate match score based on skill overlap
-      const jobSkills = job.skillsets.map((s: string) => s.toLowerCase());
-      const userSkillsLower = userSkills.map((s: string) => s.toLowerCase());
-
-      const matchingSkills = jobSkills.filter((skill: string) =>
-        userSkillsLower.some(userSkill =>
-          userSkill.includes(skill) || skill.includes(userSkill)
-        )
-      );
-
-      const matchScore = (matchingSkills.length / jobSkills.length) * 100;
-
-      return {
-        ...job,
-        matchScore: Math.round(matchScore)
-      };
-    }).filter((job: JobMatch) => job.matchScore > 0)
-      .sort((a: JobMatch, b: JobMatch) => b.matchScore - a.matchScore);
-
-    setMatchedJobs(matches);
-    setFilteredJobs(matches);
-  }, [user, navigate]);
-
-  useEffect(() => {
-    // Filter jobs based on search term
-    if (!searchTerm) {
-      setFilteredJobs(matchedJobs);
-    } else {
-      const filtered = matchedJobs.filter(job =>
-        job.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.skillsets.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredJobs(filtered);
+    let availableJobs = jobs;
+    
+    if (!showAllJobs) {
+      // Show only jobs matching skills and not blocked
+      availableJobs = jobs.filter(job => {
+        if (job.blocked) return false;
+        
+        const userSkills = user.skills || [];
+        const jobSkills = job.skills || [];
+        
+        // Check if any user skill matches any job skill (case insensitive)
+        const hasMatchingSkill = userSkills.some(userSkill =>
+          jobSkills.some(jobSkill =>
+            userSkill.toLowerCase().includes(jobSkill.toLowerCase()) ||
+            jobSkill.toLowerCase().includes(userSkill.toLowerCase())
+          )
+        );
+        
+        return hasMatchingSkill;
+      });
     }
-  }, [searchTerm, matchedJobs]);
 
-  const handleApply = (job: JobMatch) => {
-    // Copy referral code to clipboard
-    navigator.clipboard.writeText(job.referralCode);
-    toast.success(`Referral code "${job.referralCode}" copied to clipboard!`);
-  };
+    // Apply search filter
+    if (searchTerm) {
+      availableJobs = availableJobs.filter(job =>
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        job.company.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredJobs(availableJobs);
+  }, [user, jobs, searchTerm, showAllJobs, navigate]);
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  // --- START OF CODE FOR API CALL ---
-  const handleOpenModal = (jobId: string) => setOpenModalJobId(jobId);
-  const handleCloseModal = () => setOpenModalJobId(null);
-
-  const handleSubmitApplication = async (job: JobMatch) => {
-    setIsSubmitting(true);
-    try {
-      // The API call below is correctly structured to match your mailer.py backend
-      await fetch("http://localhost:5001/api/send-application-mail", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: job.userEmail,
-          alumni: {
-            name: user.name,
-            email: user.email,
-            usn: user.usn,
-            skills: user.skills,
-            experience: user.experience,
-          },
-          job: {
-            id: job.id,
-            role: job.role,
-            referralCode: job.referralCode,
-            description: job.description,
-            skillsets: job.skillsets,
-            experience: job.experience,
-            datePosted: job.datePosted,
-            userName: job.userName,
-          },
-        }),
-      });
-      toast.success("Application submitted! The alumni will be notified by email.");
-      handleCloseModal();
-    } catch (error) {
-      toast.error("Failed to submit application. Please try again.");
-    }
-    setIsSubmitting(false);
+  const handleCopyReferralCode = (job: any) => {
+    const code = job.referralCode || job.sourceReferral || 'N/A';
+    navigator.clipboard.writeText(code);
+    toast.success(`Referral code "${code}" copied to clipboard!`);
   };
-  // --- END OF CODE FOR API CALL ---
+
+  const calculateMatchScore = (job: any) => {
+    if (!user?.skills) return 0;
+    
+    const userSkills = user.skills.map(s => s.toLowerCase());
+    const jobSkills = job.skills.map((s: string) => s.toLowerCase());
+    
+    const matchingSkills = jobSkills.filter((skill: string) =>
+      userSkills.some(userSkill =>
+        userSkill.includes(skill) || skill.includes(userSkill)
+      )
+    );
+    
+    return Math.round((matchingSkills.length / jobSkills.length) * 100);
+  };
 
   if (!user || !user.isVerified) {
     return null;
@@ -183,9 +140,9 @@ const AlumniDashboard = () => {
           </TabsList>
 
           <TabsContent value="matches" className="space-y-6">
-            {/* Search Bar */}
+            {/* Search Bar and Toggle */}
             <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 space-y-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -195,6 +152,15 @@ const AlumniDashboard = () => {
                     className="pl-10"
                   />
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant={showAllJobs ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowAllJobs(!showAllJobs)}
+                  >
+                    {showAllJobs ? "Show Skill Matches Only" : "Show All Jobs"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -203,14 +169,9 @@ const AlumniDashboard = () => {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    {matchedJobs.length === 0 ? "No job matches found" : "No results found"}
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-2">No job matches found</h3>
                   <p className="text-muted-foreground text-center mb-4">
-                    {matchedJobs.length === 0
-                      ? "No jobs currently match your skills. Check back later for new opportunities!"
-                      : "Try adjusting your search terms to find more opportunities."
-                    }
+                    {!showAllJobs ? "No jobs currently match your skills. Try viewing all jobs or check back later!" : "No jobs found for your search criteria."}
                   </p>
                   <Button
                     variant="outline"
@@ -222,110 +183,108 @@ const AlumniDashboard = () => {
               </Card>
             ) : (
               <div className="grid gap-6">
-                {filteredJobs.map((job) => (
-                  <Card key={job.id} className="hover:shadow-medium transition-shadow">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-2">
-                          <CardTitle className="flex items-center space-x-2">
-                            <span>{job.role}</span>
-                            <Badge
-                              variant={job.matchScore >= 80 ? "default" : job.matchScore >= 50 ? "secondary" : "outline"}
-                              className="text-xs"
-                            >
-                              {job.matchScore}% Match
+                {filteredJobs.map((job) => {
+                  const matchScore = calculateMatchScore(job);
+                  const referralCode = job.referralCode || job.sourceReferral || 'N/A';
+                  
+                  return (
+                    <Card key={job.id} className={`hover:shadow-medium transition-shadow ${job.blocked ? 'opacity-60' : ''}`}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <CardTitle className="flex items-center space-x-2">
+                              <span>{job.title}</span>
+                              {!showAllJobs && (
+                                <Badge
+                                  variant={matchScore >= 80 ? "default" : matchScore >= 50 ? "secondary" : "outline"}
+                                  className="text-xs"
+                                >
+                                  {matchScore}% Match
+                                </Badge>
+                              )}
+                              {job.blocked && (
+                                <Badge variant="destructive">Closed</Badge>
+                              )}
+                            </CardTitle>
+                            <CardDescription>
+                              {job.company} • Posted by {job.postedBy} • {new Date(job.postedAt).toLocaleDateString()}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="bg-primary/10 text-primary font-mono">
+                              {referralCode}
                             </Badge>
-                          </CardTitle>
-                          <CardDescription>
-                            Posted by {job.userName} • {job.datePosted}
-                          </CardDescription>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="bg-primary/10 text-primary font-mono">
-                            {job.referralCode}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-muted-foreground">{job.description}</p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">{job.description}</p>
 
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm">Required Skills:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {job.skillsets.map((skill, index) => {
-                            const isMatched = user.skills?.some(userSkill =>
-                              userSkill.toLowerCase().includes(skill.toLowerCase()) ||
-                              skill.toLowerCase().includes(userSkill.toLowerCase())
-                            );
-                            return (
-                              <Badge
-                                key={index}
-                                variant={isMatched ? "default" : "secondary"}
-                                className={isMatched ? "bg-success text-success-foreground" : ""}
-                              >
-                                {skill}
-                              </Badge>
-                            );
-                          })}
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Required Skills:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {job.skills.map((skill: string, index: number) => {
+                              const isMatched = user.skills?.some(userSkill =>
+                                userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+                                skill.toLowerCase().includes(userSkill.toLowerCase())
+                              );
+                              return (
+                                <Badge
+                                  key={index}
+                                  variant={isMatched ? "default" : "secondary"}
+                                  className={isMatched ? "bg-success text-success-foreground" : ""}
+                                >
+                                  {skill}
+                                </Badge>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex justify-between items-center pt-4 border-t">
-                        <div className="text-sm">
-                          <span className="font-medium">Experience:</span> {job.experience}
+                        <div className="flex justify-between items-center text-sm">
+                          <div>
+                            <span className="font-medium">Experience:</span> {job.experience} years • 
+                            <span className="font-medium ml-1">Openings:</span> {job.openingsLeft}/{job.openingsTotal}
+                          </div>
+                          <Badge variant="outline">{job.source}</Badge>
                         </div>
-                        <div className="flex space-x-2">
-                          {/* ---- MODAL TRIGGER ---- */}
-                          <Dialog open={openModalJobId === job.id} onOpenChange={open => open ? handleOpenModal(job.id) : handleCloseModal()}>
-                            <DialogTrigger asChild>
+
+                        <div className="flex justify-between items-center pt-4 border-t">
+                          <div className="text-sm text-muted-foreground">
+                            Status: {job.interviewStatus}
+                          </div>
+                          <div className="flex space-x-2">
+                            {!job.blocked && (
                               <Button
-                                variant="outline"
+                                variant="default"
                                 size="sm"
-                                onClick={() => handleOpenModal(job.id)}
+                                onClick={() => setSelectedJobForApplication(job.id)}
                               >
                                 <Mail className="mr-1 h-3 w-3" />
-                                Contact
+                                Apply
                               </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Submit Job Application</DialogTitle>
-                              </DialogHeader>
-                              <div className="py-4">
-                                <p>Do you want to submit your application to <span className="font-medium">{job.userName}</span> for the role <span className="font-medium">{job.role}</span>?</p>
-                                <p className="text-xs mt-2 text-muted-foreground">Your details and referral code will be sent to the job poster via email.</p>
-                              </div>
-                              <DialogFooter>
-                                <Button
-                                  variant="ghost"
-                                  onClick={handleCloseModal}
-                                  disabled={isSubmitting}
-                                >
-                                  No
-                                </Button>
-                                <Button
-                                  onClick={() => handleSubmitApplication(job)}
-                                  disabled={isSubmitting}
-                                >
-                                  {isSubmitting ? "Submitting..." : "Yes"}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                          {/* ---- END MODAL ---- */}
-                          <Button
-                            size="sm"
-                            onClick={() => handleApply(job)}
-                          >
-                            <Code className="mr-1 h-3 w-3" />
-                            Copy Code
-                          </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCopyReferralCode(job)}
+                            >
+                              <Code className="mr-1 h-3 w-3" />
+                              Copy Code
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedJobForFeedback(job.id)}
+                            >
+                              Feedback
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -385,6 +344,22 @@ const AlumniDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Apply Modal */}
+      {selectedJobForApplication && (
+        <ApplyModal
+          job={jobs.find(job => job.id === selectedJobForApplication) || null}
+          isOpen={!!selectedJobForApplication}
+          onClose={() => setSelectedJobForApplication(null)}
+        />
+      )}
+
+      {/* Feedback Modal */}
+      {selectedJobForFeedback && (
+        <FeedbackForm
+          job={jobs.find(job => job.id === selectedJobForFeedback)!}
+        />
+      )}
     </div>
   );
 };

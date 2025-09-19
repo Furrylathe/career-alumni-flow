@@ -92,18 +92,20 @@ export const JobProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     setApplications(prev => [...prev, newApplication]);
     
-    // Decrement openingsLeft and block if needed
-    setJobs(prev => prev.map(job => {
-      if (job.id === applicationData.jobId) {
-        const newOpeningsLeft = Math.max(0, job.openingsLeft - 1);
-        return {
-          ...job,
-          openingsLeft: newOpeningsLeft,
-          blocked: newOpeningsLeft === 0
-        };
-      }
-      return job;
-    }));
+  // Decrement openingsLeft and increment filled, block if needed
+  setJobs(prev => prev.map(job => {
+    if (job.id === applicationData.jobId) {
+      const newOpeningsLeft = Math.max(0, job.openingsLeft - 1);
+      const newFilled = job.filled + 1;
+      return {
+        ...job,
+        openingsLeft: newOpeningsLeft,
+        filled: newFilled,
+        blocked: newFilled >= job.openingsTotal
+      };
+    }
+    return job;
+  }));
   };
 
   const addFeedback = (feedbackData: Omit<Feedback, 'id'>) => {

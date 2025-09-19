@@ -22,7 +22,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'alumni' | 'admin';
+  role: 'user' | 'alumni';
   organisation?: string;
   isVerified?: boolean; // for alumni
   usn?: string;
