@@ -41,7 +41,7 @@ const Index = () => {
         </div>
 
         {/* Role Selection Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 animate-fade-in shadow-strong">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto mb-4 p-3 bg-primary/20 rounded-full w-fit">
@@ -49,7 +49,7 @@ const Index = () => {
               </div>
               <CardTitle className="text-2xl text-white">I'm a User</CardTitle>
               <CardDescription className="text-white/70">
-                Post job opportunities and connect with talented alumni
+                Set up profile and access job platform
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -60,11 +60,11 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>Post job openings with requirements</span>
+                  <span>Browse job opportunities</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span>Generate referral codes for applications</span>
+                  <span>Connect with talent network</span>
                 </div>
               </div>
               <Button 
@@ -107,6 +107,41 @@ const Index = () => {
                 onClick={() => navigate('/alumni-login')}
               >
                 Get Started as Alumni
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 animate-fade-in shadow-strong">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto mb-4 p-3 bg-primary/20 rounded-full w-fit">
+                <Briefcase className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl text-white">I'm an Admin</CardTitle>
+              <CardDescription className="text-white/70">
+                Manage jobs, analytics, and platform administration
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3 text-white/80">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Manage all job postings</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>View analytics and insights</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Monitor feedback and applications</span>
+                </div>
+              </div>
+              <Button 
+                className="w-full bg-white text-primary hover:bg-white/90 font-semibold"
+                onClick={() => navigate('/admin-login')}
+              >
+                Access Admin Panel
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>

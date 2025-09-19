@@ -74,7 +74,7 @@ const UserLogin = () => {
         toast.success("Login successful!");
         navigate("/user-dashboard");
       } else {
-        toast.error(data.message || "❌ Invalid OTP");
+        toast.error(data.message || "Invalid OTP");
       }
     } catch (err) {
       console.error(err);
