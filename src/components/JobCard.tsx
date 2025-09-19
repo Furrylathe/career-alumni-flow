@@ -138,14 +138,33 @@ const JobCard: React.FC<JobCardProps> = ({ job, showApplyButton = false, onApply
           </Button>
           
           {showApplyButton && (
-            <Button
-              size="sm"
-              onClick={() => onApply?.(job)}
-              disabled={!canApply()}
-              className="flex items-center gap-1"
-            >
-              {job.blocked ? 'Closed' : job.openingsLeft === 0 ? 'Full' : 'Apply'}
-            </Button>
+            job.source === 'User' ? (
+              <Button
+                size="sm"
+                onClick={() => onApply?.(job)}
+                disabled={!canApply()}
+                className="flex items-center gap-1"
+              >
+                {job.blocked ? 'Closed' : job.openingsLeft === 0 ? 'Full' : 'Apply'}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => {
+                  const urls = {
+                    'LinkedIn': 'https://linkedin.com/jobs',
+                    'Indeed': 'https://indeed.com/jobs',
+                    'Naukri': 'https://naukri.com/jobs',
+                    'Glassdoor': 'https://glassdoor.com/jobs'
+                  };
+                  window.open(urls[job.source] || '#', '_blank');
+                }}
+                disabled={job.blocked}
+                className="flex items-center gap-1"
+              >
+                {job.blocked ? 'Closed' : `Apply on ${job.source}`}
+              </Button>
+            )
           )}
         </div>
       </CardContent>

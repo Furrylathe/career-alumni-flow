@@ -13,6 +13,7 @@ import AlumniVerification from "./pages/AlumniVerification";
 import AlumniDashboard from "./pages/AlumniDashboard";
 import JobOpenings from "./pages/JobOpenings";
 import JobDetail from "./pages/JobDetail";
+import FeedbackPage from "./pages/FeedbackPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             
             <Route path="/job-openings" element={<JobOpenings />} />
             <Route path="/job/:id" element={<JobDetail />} />
+            <Route path="/feedback/:jobId" element={<FeedbackPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

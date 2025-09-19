@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useJobs } from "@/contexts/JobContext";
 import { toast } from "sonner";
 import ApplyModal from "@/components/ApplyModal";
-import FeedbackForm from "@/components/FeedbackForm";
 
 const AlumniDashboard = () => {
   const { user, logout } = useAuth();
@@ -255,14 +254,33 @@ const AlumniDashboard = () => {
                           </div>
                           <div className="flex space-x-2">
                             {!job.blocked && (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => setSelectedJobForApplication(job.id)}
-                              >
-                                <Mail className="mr-1 h-3 w-3" />
-                                Apply
-                              </Button>
+                              job.source === 'User' ? (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => setSelectedJobForApplication(job.id)}
+                                >
+                                  <Mail className="mr-1 h-3 w-3" />
+                                  Apply
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => {
+                                    const urls = {
+                                      'LinkedIn': 'https://linkedin.com/jobs',
+                                      'Indeed': 'https://indeed.com/jobs',
+                                      'Naukri': 'https://naukri.com/jobs',
+                                      'Glassdoor': 'https://glassdoor.com/jobs'
+                                    };
+                                    window.open(urls[job.source] || '#', '_blank');
+                                  }}
+                                >
+                                  <Mail className="mr-1 h-3 w-3" />
+                                  Apply on {job.source}
+                                </Button>
+                              )
                             )}
                             <Button
                               variant="outline"
@@ -279,7 +297,7 @@ const AlumniDashboard = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setSelectedJobForFeedback(job.id)}
+                                  onClick={() => navigate(`/feedback/${job.id}`)}
                                 >
                                   Feedback
                                 </Button>
@@ -357,13 +375,6 @@ const AlumniDashboard = () => {
           job={jobs.find(job => job.id === selectedJobForApplication) || null}
           isOpen={!!selectedJobForApplication}
           onClose={() => setSelectedJobForApplication(null)}
-        />
-      )}
-
-      {/* Feedback Modal */}
-      {selectedJobForFeedback && (
-        <FeedbackForm
-          job={jobs.find(job => job.id === selectedJobForFeedback)!}
         />
       )}
     </div>

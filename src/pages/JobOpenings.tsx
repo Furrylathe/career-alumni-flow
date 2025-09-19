@@ -64,8 +64,11 @@ const JobOpenings = () => {
   }, [searchTerm, experienceFilter, jobs]);
 
   const handleApply = (job: Job) => {
-    setSelectedJob(job);
-    setIsApplyModalOpen(true);
+    // Only handle User source jobs with modal, others redirect to external platforms
+    if (job.source === 'User') {
+      setSelectedJob(job);
+      setIsApplyModalOpen(true);
+    }
   };
 
   return (
