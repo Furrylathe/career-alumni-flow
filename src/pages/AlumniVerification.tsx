@@ -36,15 +36,11 @@ const AlumniVerification = () => {
   useEffect(() => {
     if (!user) {
       navigate("/alumni-login");
-    } else if (user.isVerified) {
-      navigate("/alumni-dashboard");
     }
   }, [user, navigate]);
 
   // Only return null after all hooks and effects
-  if (!user || user.isVerified) {
-    return null;
-  }
+ 
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -86,9 +82,9 @@ const AlumniVerification = () => {
           isVerified: true,
         });
         setVerified(true);
-        toast.success("✅ Verification successful! Welcome to the alumni network.");
+        toast.success("Verification successful! Welcome to the alumni network.");
       } else {
-        toast.error("❌ Invalid credentials/document. Verification failed.");
+        toast.error("Invalid credentials/document. Verification failed.");
         setVerified(false);
       }
     } catch (err: any) {
@@ -238,7 +234,7 @@ const AlumniVerification = () => {
               {/* Continue Button */}
               <Button
                 onClick={() => navigate("/alumni-dashboard")}
-                className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+                className="w-full bg-gradient-to-r from-indigo-500 via-blue-500 to-black-500 
                            text-white font-semibold py-3 rounded-xl shadow-lg 
                            hover:opacity-90 transition duration-300 ease-in-out"
                 disabled={!verified}

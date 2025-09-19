@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const API_BASE = "http://localhost:5000/api"; // Flask backend
+const API_BASE = "http://localhost:5000/api";
 
 const UserLogin = () => {
   const [email, setEmail] = useState("");
@@ -36,7 +36,7 @@ const UserLogin = () => {
       const data = await res.json();
       if (res.ok && data.success) {
         setOtpSent(true);
-        toast.success("✅ OTP sent to your email!");
+        toast.success("OTP sent to your email!");
       } else {
         toast.error(data.message || "Failed to send OTP");
       }
@@ -71,7 +71,7 @@ const UserLogin = () => {
           role: "user" as const,
         };
         login(userData);
-        toast.success("🎉 Login successful!");
+        toast.success("Login successful!");
         navigate("/user-dashboard");
       } else {
         toast.error(data.message || "❌ Invalid OTP");
