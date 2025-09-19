@@ -40,6 +40,16 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ job }) => {
       return;
     }
 
+    // Check if user has applied to this job first
+    const { getUserApplications } = useJobs();
+    const userApplications = getUserApplications(user.email);
+    const hasApplied = userApplications.some(app => app.jobId === job.id);
+    
+    if (!hasApplied) {
+      toast.error('You can only give feedback after applying to this job');
+      return;
+    }
+
     // Check if user already left feedback for this job
     const existingFeedback = feedbacks.find(fb => fb.alumniEmail === user.email);
     if (existingFeedback) {
@@ -97,7 +107,12 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ job }) => {
   return (
     <div className="space-y-6">
       {/* Add Feedback Form */}
-      {user?.role === 'alumni' && user?.isVerified && (
+      {user?.role === 'alumni' && user?.isVerified && (() => {
+        const { getUserApplications } = useJobs();
+        const userApplications = getUserApplications(user.email);
+        const hasApplied = userApplications.some(app => app.jobId === job.id);
+        return hasApplied;
+      })() && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

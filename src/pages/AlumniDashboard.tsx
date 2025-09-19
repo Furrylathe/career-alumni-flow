@@ -272,13 +272,19 @@ const AlumniDashboard = () => {
                               <Code className="mr-1 h-3 w-3" />
                               Copy Code
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedJobForFeedback(job.id)}
-                            >
-                              Feedback
-                            </Button>
+                            {(() => {
+                              const userApplications = getUserApplications(user?.email || '');
+                              const hasApplied = userApplications.some(app => app.jobId === job.id);
+                              return hasApplied ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedJobForFeedback(job.id)}
+                                >
+                                  Feedback
+                                </Button>
+                              ) : null;
+                            })()}
                           </div>
                         </div>
                       </CardContent>

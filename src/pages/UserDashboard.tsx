@@ -339,12 +339,14 @@ const UserDashboard = () => {
               <div className="space-y-6">
                 {userJobs.map((job) => {
                   const jobFeedbacks = getFeedbacksForJob(job.id);
+                  const avgRating = jobFeedbacks.length > 0 ? 
+                    (jobFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / jobFeedbacks.length).toFixed(1) : 'N/A';
                   return (
                     <Card key={job.id}>
                       <CardHeader>
                         <CardTitle>{job.title}</CardTitle>
                         <CardDescription>
-                          {jobFeedbacks.length} feedback{jobFeedbacks.length !== 1 ? 's' : ''} received
+                          {jobFeedbacks.length} feedback{jobFeedbacks.length !== 1 ? 's' : ''} received • Avg Rating: {avgRating}/5
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
