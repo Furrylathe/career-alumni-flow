@@ -30,7 +30,7 @@ const Index = () => {
         <div className="text-center mb-16 animate-fade-in">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
             Connect Talent with
-            <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent p-2">
               Opportunity
             </span>
           </h1>
@@ -48,7 +48,7 @@ const Index = () => {
                 <Users className="h-8 w-8 text-white" />
               </div>
               <CardTitle className="text-2xl text-white">I'm a User</CardTitle>
-              <CardDescription className="text-white/70">
+              <CardDescription className="text-white/70 p-">
                 Post job openings and manage applications
               </CardDescription>
             </CardHeader>
@@ -83,7 +83,7 @@ const Index = () => {
                 <GraduationCap className="h-8 w-8 text-white" />
               </div>
               <CardTitle className="text-2xl text-white">I'm an Alumni</CardTitle>
-              <CardDescription className="text-white/70">
+              <CardDescription className="text-white/70 p">
                 Find job opportunities that match your skills and experience
               </CardDescription>
             </CardHeader>

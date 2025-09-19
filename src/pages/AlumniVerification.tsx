@@ -4,14 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  CheckCircle, 
-  User, 
-  GraduationCap, 
-  ArrowRight, 
-  X, 
-  Upload, 
-  ShieldCheck 
+import {
+  CheckCircle,
+  User,
+  GraduationCap,
+  ArrowRight,
+  X,
+  Upload,
+  ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,7 +41,7 @@ const AlumniVerification = () => {
   }, [user, navigate]);
 
   // Only return null after all hooks and effects
- 
+
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -215,7 +215,15 @@ const AlumniVerification = () => {
               )}
 
               {/* File Upload + Verification Button in one row */}
-              <div className="flex items-center gap-4">
+              {/* <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Label className="text-base font-medium">
+                    Degree Certificate
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
+                    (Upload DigiLocker verified document)
+                  </span>
+                </div>
                 <div className="flex-1 border border-dashed border-muted-foreground rounded-lg p-4 text-center">
                   <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
                   <Input
@@ -237,6 +245,45 @@ const AlumniVerification = () => {
                   <ShieldCheck className="h-5 w-5" />
                   {verified ? "Verified" : "Verify"}
                 </Button>
+              </div> */}
+              {/* File Upload + Verification Section */}
+              <div className="space-y-2">
+                {/* Label Row */}
+                <div className="flex items-center gap-2">
+                  
+                  <Label className="text">
+                    Upload DigiLocker verified document *
+                  </Label>
+                </div>
+
+                {/* Upload + Verify in one row */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 border border-dashed border-muted-foreground rounded-lg p-4 text-center">
+                    <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                    <Input
+                      id="certificate"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileChange}
+                      disabled={loading}
+                    />
+                    {file && (
+                      <p className="text-sm text-primary mt-1">
+                        {file.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={handleVerify}
+                    className={`flex items-center gap-2 px-4 py-6 h-full w-40 
+        ${verified ? "bg-green-600 hover:bg-green-700" : ""}`}
+                    disabled={loading || verified}
+                  >
+                    <ShieldCheck className="h-5 w-5" />
+                    {verified ? "Verified" : "Verify"}
+                  </Button>
+                </div>
               </div>
 
               {/* Continue Button */}

@@ -13,9 +13,11 @@ interface ApplyModalProps {
   job: Job | null;
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (job: Job) => Promise<void>;  // new
+  isSubmitting: boolean;    
 }
 
-const ApplyModal: React.FC<ApplyModalProps> = ({ job, isOpen, onClose }) => {
+const ApplyModal: React.FC<ApplyModalProps> = ({ job, isOpen, onClose, onSubmit }) => {
   const { user } = useAuth();
   const { applyToJob, getUserApplications } = useJobs();
   const [referralCode, setReferralCode] = useState('');
